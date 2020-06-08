@@ -13,8 +13,11 @@ Projeto de Arquitetura de Sistemas - UNA -  backend de uma sistema de Hotéis.
   - Git
   - Javascript
   - Yup
-  
- - Funções
  
+ 
+ - Funções
+
   - CRUD (Create - Ready - Update - Delete)
   - Validação dos dados usando YUP - https://github.com/jquense/yup
+  - Conecxão com MongoDB
+  
