@@ -1,54 +1,64 @@
 import Reserva from '../models/Reserva';
-
-
+import Usuario from '../models/Usuario';
+import hotel from '../models/Hotel';
 
 class ReservaController{
     
     async index(req, res){
-                
-        let reserva = await Reserva.find();
+
+        const{ hotel } = req.params;
+        const { nome } = req.headers;
+        let reserva = await Reserva.find({hotel, nome});
         return res.json(reserva); 
     }
 
     async show(req, res){
-        const { id } = req.params;
-        let reserva = await Reserva.findById(id).catch((err)=>{
-            return res.status(401).json({mensagem: "Usuario não autorizado!"});
-        });
+        const { hotel, id } = req.params;
+        const { nome } = req.headers;
+        let reserva = await Reserva.findOne({_id: id, hotel, nome});
+        await reserva.populate('nome').populate('hotel').execPopulate();
         return res.json(reserva);
         
     }
 
     async store(req, res){
-        const { responsavel, hotel, dataInicial, dataFinal, quantidadeAP} = req.body;
-        let reserva = await Reserva.findOne({ responsavel });
-        if(!reserva){
-            reserva = await Reserva.create({ responsavel, hotel, dataInicial, dataFinal, quantidadeAP });
-        }   
+        const { hotel } = req.params;
+        const { nome } = req.headers;
+        const { dataInicial, dataFinal, quantidadeAP} = req.body;
+        let encontrouResponsavel = await Usuario.findById(nome).catch((err =>{
+            return res.status(400).json({});            
+        }));
+        if(!encontrouResponsavel){
+            return res.status(400).json({});
+        }
+        let encontrouHotel = await hotel.findById(hotel).catch((err)=>{
+            return res.status(400).json({});
+        })
+                 
+        
+        let reserva = await Reserva.create({ hotel, nome ,dataInicial, dataFinal, quantidadeAP });        
         return res.json(reserva);   
     }
 
     async update(req, res){
-        
-       const { id, responsavel, hotel, dataInicial, dataFinal, quantidadeAP } = req.body;
-       await Reserva.updateOne({_id: id},{
-            responsavel, hotel, dataInicial, dataFinal, quantidadeAP
-       }).catch((err, row)=>{
-           return res.status(400).json({mensagem: "Requisição inválida."});
+       const { hotel } = req.params;
+       const { nome } = req.headers;   
+       const { id, dataInicial, dataFinal, quantidadeAP } = req.body;
+       await Reserva.findOneAndUpdate({_id: id, hotel, nome},{ hotel, dataInicial, dataFinal, quantidadeAP }).catch((err)=>{
+            return res.status(400).json({});
        });
-
-       const reserva = await Reserva.findById(id).catch((err)=>{
-           return res.status(400).json({mensagem:"Requisição inválida."});
-       });
-       return res.json(reserva);    
+       return res.json({mensagem: " Alterado com sucesso."});   
 
     }
 
     async destroy(req, res){
+        const { hotel } = req.params;
+        const { nome } = req.headers;
         const { id } = req.body;
-        let reserva = await Reserva.findByIdAndDelete(id);
-        return res.json({ok: true});
-      
+
+        await Reserva.findByIdAndDelete({_id: id, hotel,nome}).catch((err)=>{
+            return res.status(400).json({});
+        });      
 
     }   
 }

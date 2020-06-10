@@ -1,4 +1,5 @@
 import Usuario from '../models/Usuario';
+import * as yup from 'yup'; // for everything
 
 class SessionController{
     async index(req, res){
@@ -16,13 +17,28 @@ class SessionController{
         
     }
 
-    async store(req, res){
+    async store(req, res){       
+        /*
+        padrão diferente  para inserir os dados.
+
         const { nome, email } = req.body;
         let usuario = await Usuario.findOne({ email });
         if(!usuario){
             usuario = await Usuario.create({ nome, email });
         }   
-        return res.json(usuario);   
+        return res.json(usuario);
+        */
+        const { nome, email } = req.body;
+        const schemaValidacao = yup.object().shape({
+            nome: yup.string().required(),
+            email: yup.string().required().email()
+        });
+
+        if(! ( await schemaValidacao.isValid(req.body))){
+            return res.status(400).json({mensagem:"Dados inválido!"});
+        }
+        let usuario = await Usuario.create({ nome, email});
+        return res.json(usuario);
     }
 
     async update(req, res){
